@@ -8,7 +8,7 @@ describe "ActiveRecord American Gladiator" do
       Item.create(name: "Crash Pad", status: "inactive")
 
       # Changeable Start
-      items = Item.all
+      items = Item.all.unscoped
       # Changeable End
 
       expect(items.count).to eq 3
@@ -16,13 +16,14 @@ describe "ActiveRecord American Gladiator" do
   end
 
   context "Powerball" do
-    xit "returns all items containing Powerball" do
+    it "returns all items containing Powerball" do
       Item.create(name: "Powerball Ball")
       Item.create(name: "Powerball Goal")
       Item.create(name: "Trap Door")
 
+
       # Changeable Start
-      items = Item.all
+      items = Item.where('name LIKE ?', '%Powerball%')
       # Changeable End
 
       expect(items.count).to eq(2)
@@ -30,7 +31,7 @@ describe "ActiveRecord American Gladiator" do
   end
 
   context "Hang Tough" do
-    xit "returns orders for 3 users in 2 queries (aka: Remove the N+1 query)" do
+    it "returns orders for 3 users in 2 queries (aka: Remove the N+1 query)" do
       diamond  = User.create(name: "Diamond")
       turbo    = User.create(name: "Turbo")
       laser    = User.create(name: "Laser")
@@ -45,7 +46,7 @@ describe "ActiveRecord American Gladiator" do
       order_amounts = []
 
       # Changeable Start
-      users = User.first(3)
+      users = User.includes(:orders).first(3)
       # Changeable End
 
       # Use eager loading to remove the N+1 query
@@ -56,13 +57,14 @@ describe "ActiveRecord American Gladiator" do
         order_amounts << user.orders.first.amount
       end
 
+
       expect(order_amounts).to eq([1, 2, 4])
       expect(order_amounts).to_not include(3)
     end
   end
 
   context "The Maze" do
-    xit "returns all users that have placed an order" do
+    it "returns all users that have placed an order" do
       gemini = User.create(name: "Gemini")
       sky    = User.create(name: "Sky")
       nitro  = User.create(name: "Nitro")
@@ -72,9 +74,7 @@ describe "ActiveRecord American Gladiator" do
       nitro.orders.create
 
       # Changeable Start
-      active_users = User.all.select do |user|
-        user.orders.present?
-      end
+      active_users = User.joins(:orders).includes(:orders) 
       # Changeable End
 
       # Hint: http://guides.rubyonrails.org/active_record_querying.html#joining-tables
@@ -163,4 +163,3 @@ describe "ActiveRecord American Gladiator" do
     end
   end
 end
-
